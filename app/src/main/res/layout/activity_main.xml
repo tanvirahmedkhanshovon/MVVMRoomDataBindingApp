@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:bind="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
+
+
+    <data>
+        <variable
+            name="favclicked"
+            type="com.mtb.mvvmroomdatabinding.MainActivity.ClickHandlerFloatingButton"/>
+
+        <variable
+            name="spinnerAdapter"
+            type="android.widget.ArrayAdapter"/>
+
+
+    </data>
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
@@ -22,7 +36,11 @@
 
         </com.google.android.material.appbar.AppBarLayout>
 
-        <include layout="@layout/content_main" />
+        <include
+            android:id="@+id/secondary_layout"
+            layout="@layout/content_main"
+            bind:secondarySpinnerAdapter = "@{spinnerAdapter}"
+            bind:secondaryClickHandler ="@{favclicked}"/>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab"
@@ -30,7 +48,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/fab_margin"
-            app:srcCompat="@android:drawable/ic_dialog_email" />
+            app:srcCompat="@android:drawable/ic_input_add"
+            android:onClick="@{favclicked::onAddClicked}"/>
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

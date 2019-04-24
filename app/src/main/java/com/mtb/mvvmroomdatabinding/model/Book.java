@@ -3,6 +3,8 @@ package com.mtb.mvvmroomdatabinding.model;
 
 import com.mtb.mvvmroomdatabinding.BR;
 
+import java.util.Objects;
+
 import androidx.databinding.BaseObservable;
 import androidx.databinding.Bindable;
 
@@ -15,7 +17,7 @@ import androidx.room.PrimaryKey;
 
 import static androidx.room.ForeignKey.CASCADE;
 
-@Entity(tableName = "book_table",foreignKeys = @ForeignKey(entity = Category.class,parentColumns = "category_id",childColumns = "category_id",onDelete = CASCADE),indices = {@Index("category_id")})
+@Entity(tableName = "book_table",foreignKeys = @ForeignKey(entity = Category.class,parentColumns = "id",childColumns = "category_id",onDelete = CASCADE),indices = {@Index("category_id")})
 public class Book extends BaseObservable {
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "book_id")
@@ -24,6 +26,23 @@ public class Book extends BaseObservable {
     private String book_name;
     @ColumnInfo(name = "book_price")
     private String unit_price;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Book)) return false;
+        Book book = (Book) o;
+        return getId() == book.getId() &&
+                getCategory_id() == book.getCategory_id() &&
+                Objects.equals(getBook_name(), book.getBook_name()) &&
+                Objects.equals(getUnit_price(), book.getUnit_price());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getBook_name(), getUnit_price(), getCategory_id());
+    }
+
     @ColumnInfo(name = "category_id")
     private int category_id;
 

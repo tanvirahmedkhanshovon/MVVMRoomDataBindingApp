@@ -23,18 +23,19 @@ public class Category extends BaseObservable {
     public Category() {
     }
 
-    public Category(int id, String name, String description) {
-        this.category_id = id;
+    public Category(int category_id, String name, String description) {
+        this.category_id = category_id;
         this.name = name;
         this.description = description;
     }
 
+
     @Bindable
-    public int getId() {
+    public int getCategory_id() {
         return category_id;
     }
 
-    public void setId(int category_id) {
+    public void setCategory_id(int category_id) {
         this.category_id = category_id;
         notifyPropertyChanged(BR.category_id);
     }
@@ -57,5 +58,11 @@ public class Category extends BaseObservable {
     public void setDescription(String description) {
         this.description = description;
         notifyPropertyChanged(BR.description);
+    }
+
+
+    @Override
+    public String toString() {
+        return this.name;
     }
 }

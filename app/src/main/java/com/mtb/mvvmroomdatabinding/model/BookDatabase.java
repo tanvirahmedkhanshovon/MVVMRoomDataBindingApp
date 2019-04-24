@@ -9,7 +9,7 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-@Database(entities = {Category.class,Book.class},version = 1)
+@Database(entities = {Category.class,Book.class},version = 1,exportSchema = false)
 public abstract class BookDatabase extends RoomDatabase {
 
     public abstract CategoryDAO categoryDAO();
@@ -18,13 +18,13 @@ public abstract class BookDatabase extends RoomDatabase {
 
     private static BookDatabase instance;
 
-    public static synchronized RoomDatabase getInstance(Context context) {
+    public static synchronized BookDatabase getInstance(Context context) {
 
 
         if (instance == null) {
 
 
-            instance = Room.databaseBuilder(context.getApplicationContext(), BookDatabase.class, "book_databse").addCallback(callback).fallbackToDestructiveMigration().build();
+            instance = Room.databaseBuilder(context.getApplicationContext(), BookDatabase.class, "book_database").addCallback(callback).fallbackToDestructiveMigration().build();
         }
 
         return instance;

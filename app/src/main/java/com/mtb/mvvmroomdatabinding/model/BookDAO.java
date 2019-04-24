@@ -21,6 +21,6 @@ public interface BookDAO {
     @Query("SELECT * FROM book_table")
     LiveData<List<Book>> getAllBooks();
     @Query("SELECT * From book_table WHERE category_id = :id")
-    Book getBookByCategory(int id);
+    LiveData<List<Book>> getBookByCategory(int id);
 
 }
