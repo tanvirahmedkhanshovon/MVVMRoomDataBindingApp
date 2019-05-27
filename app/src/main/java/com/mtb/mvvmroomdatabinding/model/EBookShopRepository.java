@@ -1,18 +1,26 @@
 package com.mtb.mvvmroomdatabinding.model;
 
 import android.app.Application;
-import android.os.AsyncTask;
-import android.view.View;
+
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import java.util.List;
 
-import androidx.lifecycle.LiveData;
+import io.reactivex.Completable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Action;
+import io.reactivex.functions.Consumer;
+import io.reactivex.observers.DisposableCompletableObserver;
+import io.reactivex.schedulers.Schedulers;
 
 public class EBookShopRepository {
     private CategoryDAO categoryDAO;
     private BookDAO bookDAO;
-    private LiveData<List<Category>> categoryList;
-    private LiveData<List<Book>> bookList;
+    private MutableLiveData<List<Category>> categoryList = new MutableLiveData<>();
+    private MutableLiveData<List<Book>> bookList = new MutableLiveData<>();
+    private CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     public EBookShopRepository(Application application) {
 
@@ -21,177 +29,189 @@ public class EBookShopRepository {
 
         categoryDAO = bookDatabase.categoryDAO();
         bookDAO = bookDatabase.bookDAO();
+
+
     }
 
-    public LiveData<List<Category>> getCategoryList() {
-        return categoryDAO.getAllCategories();
+    public MutableLiveData<List<Category>> getCategoryList() {
+        compositeDisposable.add(categoryDAO.getAllCategories()
+                .subscribeOn(Schedulers.computation())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<List<Category>>() {
+                    @Override
+                    public void accept(List<Category> categories) throws Exception {
+
+                        categoryList.postValue(categories);
+                    }
+                }));
+
+
+        return categoryList;
     }
 
     public LiveData<List<Book>> getBookList(int categoryId) {
-        return bookDAO.getBookByCategory(categoryId);
+
+
+        compositeDisposable.add(bookDAO.getBookByCategory(categoryId)
+                .subscribeOn(Schedulers.computation())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<List<Book>>() {
+                    @Override
+                    public void accept(List<Book> books) throws Exception {
+
+                        bookList.postValue(books);
+                    }
+                }));
+        return bookList;
     }
 
-    public void insertCategory (Category category){
+    public void insertCategory(final Category category) {
 
 
-        new InsertCategoryAsyncTask(categoryDAO).execute(category);
+        compositeDisposable.add(Completable.fromAction(new Action() {
+            @Override
+            public void run() throws Exception {
+
+                categoryDAO.insert(category);
+            }
+        }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(new DisposableCompletableObserver() {
+                    @Override
+                    public void onComplete() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+                }));
+
+
     }
 
+    public void insertBook(final Book book) {
 
-    private static class InsertCategoryAsyncTask extends AsyncTask<Category,Void,Void>{
-        private CategoryDAO categoryDAO;
+        compositeDisposable.add(Completable.fromAction(new Action() {
+            @Override
+            public void run() throws Exception {
+                bookDAO.insert(book);
+            }
+        }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(new DisposableCompletableObserver() {
+                    @Override
+                    public void onComplete() {
 
-        public InsertCategoryAsyncTask(CategoryDAO categoryDAO) {
-            this.categoryDAO = categoryDAO;
-        }
+                    }
 
-        @Override
-        protected Void doInBackground(Category... categories) {
+                    @Override
+                    public void onError(Throwable e) {
 
-            categoryDAO.insert(categories[0]);
-            return null;
-        }
+                    }
+                }));
 
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-        }
-    }
-    public void insertBook (Book book){
-
-
-        new InsertBookAsyncTask(bookDAO).execute(book);
     }
 
+    public void deleteCategory(final Category category) {
+        compositeDisposable.add(Completable.fromAction(new Action() {
+            @Override
+            public void run() throws Exception {
 
-    private static class InsertBookAsyncTask extends AsyncTask<Book,Void,Void>{
-        private BookDAO bookDAO;
+                categoryDAO.delete(category);
+            }
+        }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(new DisposableCompletableObserver() {
+                    @Override
+                    public void onComplete() {
 
-        public InsertBookAsyncTask(BookDAO bookDAO) {
-            this.bookDAO = bookDAO;
-        }
+                    }
 
-        @Override
-        protected Void doInBackground(Book... books) {
+                    @Override
+                    public void onError(Throwable e) {
 
-            bookDAO.insert(books[0]);
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-        }
-    }
-    public void deleteCategory (Category category){
+                    }
+                }));
 
 
-        new UpdateCategoryAsyncTask(categoryDAO).execute(category);
     }
 
+    public void deleteBook(final Book book) {
 
-    private static class DeleteCategoryAsyncTask extends AsyncTask<Category,Void,Void>{
-        private CategoryDAO categoryDAO;
+        compositeDisposable.add(Completable.fromAction(new Action() {
+            @Override
+            public void run() throws Exception {
+                bookDAO.delete(book);
+            }
+        }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(new DisposableCompletableObserver() {
+                    @Override
+                    public void onComplete() {
 
-        public DeleteCategoryAsyncTask(CategoryDAO categoryDAO) {
-            this.categoryDAO = categoryDAO;
-        }
+                    }
 
-        @Override
-        protected Void doInBackground(Category... categories) {
+                    @Override
+                    public void onError(Throwable e) {
 
-            categoryDAO.delete(categories[0]);
-            return null;
-        }
+                    }
+                }));
 
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-        }
     }
 
-    public void deleteBook (Book book){
+    public void updateCategory(final Category category) {
+        compositeDisposable.add(Completable.fromAction(new Action() {
+            @Override
+            public void run() throws Exception {
+
+                categoryDAO.update(category);
+            }
+        }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(new DisposableCompletableObserver() {
+                    @Override
+                    public void onComplete() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+                }));
 
 
-        new DeleteBookAsyncTask(bookDAO).execute(book);
     }
 
+    public void updateBook(final Book book) {
+        compositeDisposable.add(Completable.fromAction(new Action() {
+            @Override
+            public void run() throws Exception {
+                bookDAO.update(book);
+            }
+        }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(new DisposableCompletableObserver() {
+                    @Override
+                    public void onComplete() {
 
-    private static class DeleteBookAsyncTask extends AsyncTask<Book,Void,Void>{
-        private BookDAO bookDAO;
+                    }
 
-        public DeleteBookAsyncTask(BookDAO bookDAO) {
-            this.bookDAO = bookDAO;
-        }
+                    @Override
+                    public void onError(Throwable e) {
 
-        @Override
-        protected Void doInBackground(Book... books) {
-
-            bookDAO.delete(books[0]);
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-        }
-    }
-    public void updateCategory (Category category){
+                    }
+                }));
 
 
-        new UpdateCategoryAsyncTask(categoryDAO).execute(category);
     }
 
+    public void clear(){
 
-    private static class UpdateCategoryAsyncTask extends AsyncTask<Category,Void,Void>{
-        private CategoryDAO categoryDAO;
 
-        public UpdateCategoryAsyncTask(CategoryDAO categoryDAO) {
-            this.categoryDAO = categoryDAO;
-        }
-
-        @Override
-        protected Void doInBackground(Category... categories) {
-
-            categoryDAO.update(categories[0]);
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-        }
+        compositeDisposable.clear();
     }
-
-
-    public void updateBook (Book book){
-
-
-        new UpdateBookAsyncTask(bookDAO).execute(book);
-    }
-
-
-    private static class UpdateBookAsyncTask extends AsyncTask<Book,Void,Void>{
-        private BookDAO bookDAO;
-
-        public UpdateBookAsyncTask(BookDAO bookDAO) {
-            this.bookDAO = bookDAO;
-        }
-
-        @Override
-        protected Void doInBackground(Book... books) {
-
-            bookDAO.update(books[0]);
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-        }
-    }
-
-
-
 
 }

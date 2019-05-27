@@ -9,21 +9,20 @@ import com.mtb.mvvmroomdatabinding.model.EBookShopRepository;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
 
-public class MainActivityViewModel extends AndroidViewModel {
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.ViewModel;
+
+public class MainActivityViewModel extends ViewModel {
 
 
     private EBookShopRepository repository;
     private LiveData<List<Category>> categoryList;
     private LiveData<List<Book>> bookList;
 
-    public MainActivityViewModel(@NonNull Application application) {
-        super(application);
-        repository = new EBookShopRepository(application);
+    public MainActivityViewModel(EBookShopRepository repository) {
+        this.repository = repository;
     }
-
 
     public LiveData<List<Category>> getCategoryList() {
 
@@ -65,6 +64,12 @@ public class MainActivityViewModel extends AndroidViewModel {
     public void deleteCategory(Category category) {
 
         repository.deleteCategory(category);
+    }
+
+    public void clear(){
+
+
+        repository.clear();
     }
 
 

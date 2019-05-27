@@ -13,6 +13,7 @@ import com.mtb.mvvmroomdatabinding.databinding.ActivityMainBinding;
 import com.mtb.mvvmroomdatabinding.model.Book;
 import com.mtb.mvvmroomdatabinding.model.Category;
 import com.mtb.mvvmroomdatabinding.viewmodel.MainActivityViewModel;
+import com.mtb.mvvmroomdatabinding.viewmodel.MainActivityViewModelFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +29,8 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import javax.inject.Inject;
+
 public class MainActivity extends AppCompatActivity {
     public static final int ADD_BOOK_REQUEST_CODE = 1;
     public static final int EDIT_BOOK_REQUEST_CODE = 2;
@@ -40,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView booksRecyclerView;
     private BooksAdapter adapter;
     private int seletectedBookId;
+    @Inject
+    public MainActivityViewModelFactory mainActivityViewModelFactory;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,16 +52,22 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        setTitle("Book Library");
 
         ClickHandlerFloatingButton clickHandlerFloatingButton = new ClickHandlerFloatingButton();
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         binding.setFavclicked(clickHandlerFloatingButton);
 
 
-        viewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
+        App.getApp().getEbookShopComponent().inject(this);
+
+        //viewModel = ViewModelProviders.of(this).get(MainActivityViewModel.class);
+        viewModel = ViewModelProviders.of(this,mainActivityViewModelFactory).get(MainActivityViewModel.class);
         viewModel.getCategoryList().observe(this, new Observer<List<Category>>() {
             @Override
             public void onChanged(List<Category> categories) {
+
+
 
                 categoryList = (ArrayList<Category>) categories;
                 for (Category c : categories) {
@@ -210,5 +221,12 @@ public class MainActivity extends AppCompatActivity {
 //            Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
             loadBooksArrayList(selectedCategory.getCategory_id());
         }
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        viewModel.clear();
     }
 }
